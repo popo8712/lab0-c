@@ -133,7 +133,7 @@ bool q_delete_mid(struct list_head *head)
     if (size == 0)
         return false;
 
-    struct list_head *node = head;
+    struct list_head *node = head->next;
     for (int i = 0; i < size / 2; i++) {
         node = node->next;
     }
@@ -151,12 +151,13 @@ bool q_delete_dup(struct list_head *head)
         return false;
 
     struct list_head *curr, *tmp;
+    bool has_dup = false;
+
     list_for_each_safe(curr, tmp, head)
     {
         element_t *elem1 = list_entry(curr, element_t, list);
         struct list_head *next = curr->next;
 
-        bool has_dup = false;
         while (next != head) {
             element_t *elem2 = list_entry(next, element_t, list);
             struct list_head *tmp_next = next->next;
@@ -173,6 +174,7 @@ bool q_delete_dup(struct list_head *head)
         if (has_dup) {
             list_del(curr);
             q_release_element(elem1);
+            has_dup = false;
         }
     }
 
@@ -229,6 +231,7 @@ void q_reverseK(struct list_head *head, int k)
         for (int i = 0; i < k; i++) {
             struct list_head *temp = node->next;
             list_move(node, prev);
+            prev = node;
             node = temp;
         }
 
