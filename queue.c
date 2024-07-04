@@ -97,13 +97,15 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
     if (!head || list_empty(head))
         return NULL;
-    element_t *add = list_last_entry(head, element_t, list);
+
+    element_t *remove_element = list_last_entry(head, element_t, list);
     if (sp && bufsize) {
-        strncpy(sp, add->value, bufsize - 1);
+        strncpy(sp, remove_element->value, bufsize - 1);
         sp[bufsize - 1] = '\0';
     }
-    list_del(&add->list);
-    return add;
+
+    list_del(&remove_element->list);
+    return remove_element;
 }
 
 
