@@ -159,8 +159,8 @@ bool q_delete_dup(struct list_head *head)
         bool has_dup = false;
         while (next != head) {
             element_t *elem2 = list_entry(next, element_t, list);
+            struct list_head *tmp_next = next->next;
             if (strcmp(elem1->value, elem2->value) == 0) {
-                struct list_head *tmp_next = next->next;
                 list_del(next);
                 q_release_element(elem2);
                 next = tmp_next;
@@ -189,7 +189,7 @@ void q_swap(struct list_head *head)
     while (node != head && node->next != head) {
         struct list_head *next = node->next;
         list_del(next);
-        list_add_tail(next, node);
+        list_add(next, node);
         node = node->next;
     }
 }
@@ -214,29 +214,25 @@ void q_reverseK(struct list_head *head, int k)
         return;
 
     struct list_head *curr = head->next;
-    struct list_head *end = head->next;
-
     while (curr != head) {
-        int count = 1;
-        while (count < k && end->next != head) {
+        struct list_head *start = curr, *end = curr;
+        for (int i = 1; i < k && end->next != head; i++) {
             end = end->next;
-            count++;
         }
-
-        if (count < k)
+        if (start == end)
             break;
-
+        
         struct list_head *next = end->next;
-        struct list_head *prev = curr->prev;
+        struct list_head *prev = start->prev;
+        struct list_head *node = start;
 
-        for (int i = 0; i < count; i++) {
-            struct list_head *temp = curr->next;
-            list_move(curr, prev);
-            curr = temp;
+        for (int i = 0; i < k; i++) {
+            struct list_head *temp = node->next;
+            list_move(node, prev);
+            node = temp;
         }
 
         curr = next;
-        end = next;
     }
 }
 
@@ -321,42 +317,42 @@ int q_descend(struct list_head *head)
     return count;
 }
 
-/* Merge all the queues into one sorted queue, which is in ascending/descending order
- */
+/* Merge all the queues into one sorted queue, which is in ascending/descending order */
 int q_merge(struct list_head *head, bool descend)
 {
-    if (!head || list_empty(head))
-        return 0;
 
-    queue_contex_t *first_ctx = list_entry(head->next, queue_contex_t, chain);
-    struct list_head *merged_queue = first_ctx->q;
+     if (!head || list_empty(head))
+          return 0;
 
-    struct list_head *curr;
-    list_for_each(curr, head)
-    {
-        if (curr == head->next)
-            continue;
+        queue_contex_t *first_ctx = list_entry(head->next, queue_contex_t, chain);
+        struct list_head *merged_queue = first_ctx->q;
 
-        queue_contex_t *ctx = list_entry(curr, queue_contex_t, chain);
-        struct list_head *q = ctx->q;
-
-        struct list_head *node;
-        list_for_each(node, q)
+        struct list_head *curr;
+        list_for_each(curr, head)
         {
-            element_t *elem = list_entry(node, element_t, list);
-            struct list_head *pos;
-            list_for_each(pos, merged_queue)
-            {
-                element_t *m_elem = list_entry(pos, element_t, list);
-                if ((descend && strcmp(elem->value, m_elem->value) > 0) ||
-                    (!descend && strcmp(elem->value, m_elem->value) < 0)) {
-                    break;
-                }
-            }
-            list_move_tail(node, pos);
-        }
-        INIT_LIST_HEAD(q);
-    }
+            if (curr == head->next)
+                continue;
 
-    return q_size(merged_queue);
-}
+            queue_contex_t *ctx = list_entry(curr, queue_contex_t, chain);
+            struct list_head *q = ctx->q;
+
+            struct list_head *node;
+            list_for_each(node, q)
+            {
+                element_t *elem = list_entry(node, element_t, list);
+                struct list_head *pos;
+                list_for_each(pos, merged_queue)
+                {
+                    element_t *m_elem = list_entry(pos, element_t, list);
+                    if ((descend && strcmp(elem->value, m_elem->value) > 0) ||
+                        (!descend && strcmp(elem->value, m_elem->value) < 0)) {
+                        break;
+                    }
+                }
+                list_move_tail(node, pos);
+            }
+            INIT_LIST_HEAD(q);
+        }
+
+        return q_size(merged_queue)
+            }
