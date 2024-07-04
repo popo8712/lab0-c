@@ -20,8 +20,7 @@ void q_free(struct list_head *head)
     if (!head)
         return;
     element_t *pos, *n;
-    list_for_each_entry_safe(pos, n, head, list)
-    {
+    list_for_each_entry_safe (pos, n, head, list) {
         q_release_element(pos);
     }
     free(head);
@@ -111,8 +110,7 @@ int q_size(struct list_head *head)
     }
     int count = 0;
     struct list_head *curser;
-    list_for_each(curser, head)
-    {
+    list_for_each (curser, head) {
         count += 1;
     }
     return count;
@@ -142,8 +140,7 @@ bool q_delete_dup(struct list_head *head)
         return false;
     struct list_head *pos, *n;
     bool flag = false;
-    list_for_each_safe(pos, n, head)
-    {
+    list_for_each_safe (pos, n, head) {
         element_t *pos_element = list_entry(pos, element_t, list);
         char *n_val = list_entry(n, element_t, list)->value;
         if (pos->next != head && strcmp(pos_element->value, n_val) == 0) {
@@ -166,8 +163,7 @@ void q_swap(struct list_head *head)
         return;
     struct list_head *pos, *n;
     bool odd = false;
-    list_for_each_safe(pos, n, head)
-    {
+    list_for_each_safe (pos, n, head) {
         if (odd) {
             list_move(pos, pos->prev->prev);
         }
@@ -181,8 +177,7 @@ void q_reverse(struct list_head *head)
     if (!head || list_empty(head))
         return;
     struct list_head *pos, *n;
-    list_for_each_safe(pos, n, head)
-    {
+    list_for_each_safe (pos, n, head) {
         list_move(pos, head);
     }
 }
@@ -194,8 +189,7 @@ void q_reverseK(struct list_head *head, int k)
         return;
     int count = 0;
     struct list_head *pos, *n, *cut = head, tmp;
-    list_for_each_safe(pos, n, head)
-    {
+    list_for_each_safe (pos, n, head) {
         if (count % k == k - 1) {
             list_cut_position(&tmp, cut->next, pos);
             q_reverse(&tmp);
@@ -315,8 +309,7 @@ int q_merge(struct list_head *head, bool descend)
     struct list_head *pos, *n;
     struct list_head first;
     INIT_LIST_HEAD(&first);
-    list_for_each_safe(pos, n, head)
-    {
+    list_for_each_safe (pos, n, head) {
         queue_contex_t *right = list_entry(pos, queue_contex_t, chain);
         q_merge_two(&first, right->q);
     }
