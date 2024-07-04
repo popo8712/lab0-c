@@ -320,39 +320,38 @@ int q_descend(struct list_head *head)
 /* Merge all the queues into one sorted queue, which is in ascending/descending order */
 int q_merge(struct list_head *head, bool descend)
 {
+    if (!head || list_empty(head))
+        return 0;
 
-     if (!head || list_empty(head))
-          return 0;
+    queue_contex_t *first_ctx = list_entry(head->next, queue_contex_t, chain);
+    struct list_head *merged_queue = first_ctx->q;
 
-        queue_contex_t *first_ctx = list_entry(head->next, queue_contex_t, chain);
-        struct list_head *merged_queue = first_ctx->q;
+    struct list_head *curr;
+    list_for_each(curr, head)
+    {
+        if (curr == head->next)
+            continue;
 
-        struct list_head *curr;
-        list_for_each(curr, head)
+        queue_contex_t *ctx = list_entry(curr, queue_contex_t, chain);
+        struct list_head *q = ctx->q;
+
+        struct list_head *node;
+        list_for_each(node, q)
         {
-            if (curr == head->next)
-                continue;
-
-            queue_contex_t *ctx = list_entry(curr, queue_contex_t, chain);
-            struct list_head *q = ctx->q;
-
-            struct list_head *node;
-            list_for_each(node, q)
+            element_t *elem = list_entry(node, element_t, list);
+            struct list_head *pos;
+            list_for_each(pos, merged_queue)
             {
-                element_t *elem = list_entry(node, element_t, list);
-                struct list_head *pos;
-                list_for_each(pos, merged_queue)
-                {
-                    element_t *m_elem = list_entry(pos, element_t, list);
-                    if ((descend && strcmp(elem->value, m_elem->value) > 0) ||
-                        (!descend && strcmp(elem->value, m_elem->value) < 0)) {
-                        break;
-                    }
+                element_t *m_elem = list_entry(pos, element_t, list);
+                if ((descend && strcmp(elem->value, m_elem->value) > 0) ||
+                    (!descend && strcmp(elem->value, m_elem->value) < 0)) {
+                    break;
                 }
-                list_move_tail(node, pos);
             }
-            INIT_LIST_HEAD(q);
+            list_move_tail(node, pos);
         }
+        INIT_LIST_HEAD(q);
+    }
 
-        return q_size(merged_queue)
-            }
+    return q_size(merged_queue);
+}
