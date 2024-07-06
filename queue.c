@@ -284,8 +284,10 @@ int q_merge(struct list_head *head, bool descend)
     INIT_LIST_HEAD(&merged_head);
 
     list_for_each_entry_safe (ctx, next_ctx, head, chain) {
-        list_splice_tail_init(ctx->q, &merged_head);
-        ctx->q = NULL;
+        if (ctx->q) {
+            list_splice_tail_init(ctx->q, &merged_head);
+            ctx->q = NULL;
+        }
     }
 
     q_sort(&merged_head, descend);
