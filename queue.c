@@ -205,8 +205,8 @@ void q_reverse(struct list_head *head)
     head->next = prev;
 }
 
-/* Sort elements of queue in ascending order */
-void q_sort(struct list_head *head)
+/* Sort elements of queue in ascending order or descending order */
+void q_sort(struct list_head *head, bool descend)
 {
     if (!head || list_empty(head))
         return;
@@ -222,9 +222,16 @@ void q_sort(struct list_head *head)
     list_for_each_safe (node, next, head) {
         struct list_head *pos;
         list_for_each (pos, &sorted) {
-            if (strcmp(list_entry(node, element_t, list)->value,
-                       list_entry(pos, element_t, list)->value) < 0) {
-                break;
+            if (descend) {
+                if (strcmp(list_entry(node, element_t, list)->value,
+                           list_entry(pos, element_t, list)->value) > 0) {
+                    break;
+                }
+            } else {
+                if (strcmp(list_entry(node, element_t, list)->value,
+                           list_entry(pos, element_t, list)->value) < 0) {
+                    break;
+                }
             }
         }
         list_add_tail(node, pos);
