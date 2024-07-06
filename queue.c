@@ -81,7 +81,7 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
     element_t *elem = list_first_entry(head, element_t, list);
     list_del(&elem->list);
 
-    if (sp) {
+    if (sp && elem->value) {
         strncpy(sp, elem->value, bufsize - 1);
         sp[bufsize - 1] = '\0';
     }
@@ -98,7 +98,7 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
     element_t *elem = list_last_entry(head, element_t, list);
     list_del(&elem->list);
 
-    if (sp) {
+    if (sp && elem->value) {
         strncpy(sp, elem->value, bufsize - 1);
         sp[bufsize - 1] = '\0';
     }
@@ -145,31 +145,26 @@ bool q_delete_dup(struct list_head *head)
         return false;
 
     struct list_head *cur = head->next, *safe;
-    element_t *elem, *next_elem;
-
-    while (cur != head && cur->next != head) {
-        elem = list_entry(cur, element_t, list);
-        next_elem = list_entry(cur->next, element_t, list);
-
-        if (strcmp(elem->value, next_elem->value) == 0) {
-            while (cur->next != head &&
-                   strcmp(elem->value,
-                          list_entry(cur->next, element_t, list)->value) == 0) {
-                safe = cur->next;
-                list_del(cur);
-                free(elem->value);
-                free(elem);
-                cur = safe;
-                elem = list_entry(cur, element_t, list);
+    while (cur != head) {
+        element_t *cur_elem = list_entry(cur, element_t, list);
+        bool duplicate = false;
+        safe = cur->next;
+        while (safe != head) {
+            element_t *safe_elem = list_entry(safe, element_t, list);
+            if (strcmp(cur_elem->value, safe_elem->value) == 0) {
+                list_del(&safe_elem->list);
+                free(safe_elem->value);
+                free(safe_elem);
+                duplicate = true;
             }
-            safe = cur->next;
-            list_del(cur);
-            free(elem->value);
-            free(elem);
-            cur = safe;
-        } else {
-            cur = cur->next;
+            safe = safe->next;
         }
+        if (duplicate) {
+            list_del(&cur_elem->list);
+            free(cur_elem->value);
+            free(cur_elem);
+        }
+        cur = cur->next;
     }
     return true;
 }
@@ -199,10 +194,12 @@ void q_reverse(struct list_head *head)
     while (cur != head) {
         next = cur->next;
         cur->next = prev;
+        cur->prev = next;
         prev = cur;
         cur = next;
     }
     head->next = prev;
+    prev->prev = head;
 }
 
 /* Sort elements of queue in ascending order or descending order */
@@ -211,31 +208,24 @@ void q_sort(struct list_head *head, bool descend)
     if (!head || list_empty(head))
         return;
 
-    struct list_head *node, *next;
-    list_for_each_safe (node, next, head) {
-        list_del(node);
-    }
-
     struct list_head sorted;
     INIT_LIST_HEAD(&sorted);
 
+    struct list_head *node, *next;
     list_for_each_safe (node, next, head) {
+        list_del(node);
         struct list_head *pos;
         list_for_each (pos, &sorted) {
-            if (descend) {
-                if (strcmp(list_entry(node, element_t, list)->value,
-                           list_entry(pos, element_t, list)->value) > 0) {
-                    break;
-                }
-            } else {
-                if (strcmp(list_entry(node, element_t, list)->value,
-                           list_entry(pos, element_t, list)->value) < 0) {
-                    break;
-                }
+            element_t *a = list_entry(node, element_t, list);
+            element_t *b = list_entry(pos, element_t, list);
+            if ((descend && strcmp(a->value, b->value) > 0) ||
+                (!descend && strcmp(a->value, b->value) < 0)) {
+                break;
             }
         }
         list_add_tail(node, pos);
     }
+
     list_splice(&sorted, head);
 }
 
@@ -262,6 +252,9 @@ void q_reverseK(struct list_head *head, int k)
 /* Descend the queue */
 int q_descend(struct list_head *head)
 {
+    if (!head)
+        return 0;
+
     q_sort(head, true);
     return q_size(head);
 }
@@ -269,6 +262,9 @@ int q_descend(struct list_head *head)
 /* Ascend the queue */
 int q_ascend(struct list_head *head)
 {
+    if (!head)
+        return 0;
+
     q_sort(head, false);
     return q_size(head);
 }
