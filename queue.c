@@ -238,3 +238,74 @@ void q_sort(struct list_head *head, bool descend)
     }
     list_splice(&sorted, head);
 }
+
+/* Reverse the first k elements of queue */
+void q_reverseK(struct list_head *head, int k)
+{
+    if (!head || list_empty(head) || k <= 0)
+        return;
+
+    struct list_head *cur = head->next;
+    struct list_head temp_head;
+    INIT_LIST_HEAD(&temp_head);
+
+    for (int i = 0; i < k && cur != head; i++) {
+        struct list_head *next = cur->next;
+        list_del(cur);
+        list_add(cur, &temp_head);
+        cur = next;
+    }
+
+    list_splice_tail(&temp_head, head);
+}
+
+/* Descend the queue */
+void q_descend(struct list_head *head)
+{
+    q_sort(head, true);
+}
+
+/* Ascend the queue */
+void q_ascend(struct list_head *head)
+{
+    q_sort(head, false);
+}
+
+/* Merge two queues */
+struct list_head *q_merge(struct list_head *head1, struct list_head *head2)
+{
+    if (!head1 || !head2)
+        return NULL;
+
+    struct list_head *merged_head = q_new();
+    if (!merged_head)
+        return NULL;
+
+    struct list_head *cur1 = head1->next;
+    struct list_head *cur2 = head2->next;
+
+    while (cur1 != head1 && cur2 != head2) {
+        element_t *elem1 = list_entry(cur1, element_t, list);
+        element_t *elem2 = list_entry(cur2, element_t, list);
+
+        if (strcmp(elem1->value, elem2->value) < 0) {
+            list_move_tail(cur1, merged_head);
+            cur1 = head1->next;
+        } else {
+            list_move_tail(cur2, merged_head);
+            cur2 = head2->next;
+        }
+    }
+
+    while (cur1 != head1) {
+        list_move_tail(cur1, merged_head);
+        cur1 = head1->next;
+    }
+
+    while (cur2 != head2) {
+        list_move_tail(cur2, merged_head);
+        cur2 = head2->next;
+    }
+
+    return merged_head;
+}
